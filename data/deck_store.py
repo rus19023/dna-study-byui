@@ -1,32 +1,32 @@
-# deck_store.py
-from data.db import decks
+# data/deck_store.py
+from data.db import get_db
 
 # # run once to sync in-memory decks to database
-
-
 # from data.decks import DECKS
-
 # for name, cards in DECKS.items():
-#     decks.update_one(
+#     db = get_db()
+#     db.decks.update_one(
 #         {"_id": name},
 #         {"$set": {"cards": cards}},
 #         upsert=True
 #     )
-
 # # end run once block
 
 
 def get_deck_names():
-    return sorted(decks.distinct("_id"))
+    db = get_db()
+    return sorted(db.decks.distinct("_id"))
 
 
 def get_deck(deck_name):
-    doc = decks.find_one({"_id": deck_name})
+    db = get_db()
+    doc = db.decks.find_one({"_id": deck_name})
     return doc["cards"] if doc else []
 
 
 def add_card(deck_name, question, answer):
-    decks.update_one(
+    db = get_db()
+    db.decks.update_one(
         {"_id": deck_name},
         {
             "$push": {
@@ -38,11 +38,41 @@ def add_card(deck_name, question, answer):
         },
         upsert=True
     )
+
+
+def create_deck(deck_name):
+    """
+    Create a new empty deck
+    
+    Args:
+        deck_name: Name of the deck to create
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        db = get_db()
+        
+        # Check if deck already exists
+        existing = db.decks.find_one({"_id": deck_name})
+        if existing:
+            return False
+        
+        # Create new deck with empty cards list
+        db.decks.insert_one({
+            "_id": deck_name,
+            "cards": []
+        })
+        return True
+    except Exception as e:
+        print(f"Error creating deck: {e}")
+        return False
     
 
 def find_duplicate_cards(deck_name):
     """Find duplicate cards in a deck (same question)"""
-    doc = decks.find_one({"_id": deck_name})
+    db = get_db()
+    doc = db.decks.find_one({"_id": deck_name})
     if not doc or "cards" not in doc:
         return []
     
@@ -67,14 +97,15 @@ def find_duplicate_cards(deck_name):
 
 def delete_card(deck_name, card_index):
     """Delete a card from a deck by index"""
-    doc = decks.find_one({"_id": deck_name})
+    db = get_db()
+    doc = db.decks.find_one({"_id": deck_name})
     if not doc or "cards" not in doc:
         return False
     
     cards = doc["cards"]
     if 0 <= card_index < len(cards):
         cards.pop(card_index)
-        decks.update_one(
+        db.decks.update_one(
             {"_id": deck_name},
             {"$set": {"cards": cards}}
         )
@@ -84,7 +115,8 @@ def delete_card(deck_name, card_index):
 
 def get_all_cards_with_indices(deck_name):
     """Get all cards with their indices for management"""
-    doc = decks.find_one({"_id": deck_name})
+    db = get_db()
+    doc = db.decks.find_one({"_id": deck_name})
     if not doc or "cards" not in doc:
         return []
     

@@ -1,17 +1,19 @@
 # data/user_store.py
 
-from data.db import users, study_sessions
+from data.db import get_db
 from datetime import datetime, timedelta
 
 
 def get_all_usernames():
     """Get list of all registered usernames"""
-    return sorted([user["_id"] for user in users.find({}, {"_id": 1})])
+    db = get_db()
+    return sorted([user["_id"] for user in db.users.find({}, {"_id": 1})])
 
 
 def create_user(username, password, is_admin=False):
     """Create a new user with password"""
-    users.insert_one({
+    db = get_db()
+    db.users.insert_one({
         "_id": username,
         "password": password,
         "is_admin": is_admin,
@@ -30,11 +32,13 @@ def create_user(username, password, is_admin=False):
 
 def get_user(username):
     """Get user data"""
-    return users.find_one({"_id": username})
+    db = get_db()
+    return db.users.find_one({"_id": username})
 
 
 def update_user_score(username, points_delta, correct=True, verified=False):
     """Update user's score and stats"""
+    db = get_db()
     increment = {
         "total_score": points_delta,
         "cards_studied": 1
@@ -52,7 +56,7 @@ def update_user_score(username, points_delta, correct=True, verified=False):
         else:
             increment["verification_failed"] = 1
         
-    users.update_one(
+    db.users.update_one(
         {"_id": username},
         {
             "$inc": increment
@@ -62,14 +66,14 @@ def update_user_score(username, points_delta, correct=True, verified=False):
     # Update best streak if current is higher
     user = get_user(username)
     if correct and user["current_streak"] > user.get("best_streak", 0):
-        users.update_one(
+        db.users.update_one(
             {"_id": username},
             {"$set": {"best_streak": user["current_streak"]}}
         )
     
     # Reset streak if incorrect
     if not correct:
-        users.update_one(
+        db.users.update_one(
             {"_id": username},
             {"$set": {"current_streak": 0}}
         )
@@ -77,7 +81,8 @@ def update_user_score(username, points_delta, correct=True, verified=False):
 
 def log_study_session(username, deck_name, card_question, response_time, correct, mode):
     """Log individual card responses for anti-cheat analysis"""
-    study_sessions.insert_one({
+    db = get_db()
+    db.study_sessions.insert_one({
         "username": username,
         "deck_name": deck_name,
         "card_question": card_question,
@@ -90,9 +95,10 @@ def log_study_session(username, deck_name, card_question, response_time, correct
 
 def get_suspicious_users():
     """Get users with suspicious patterns"""
+    db = get_db()
     suspicious = []
     
-    for user in users.find():
+    for user in db.users.find():
         username = user["_id"]
         
         # Check 1: ONLY flag if 100% accuracy (literally perfect) with many cards
@@ -118,7 +124,7 @@ def get_suspicious_users():
                 })
         
         # Check 3: Impossible speed (average < 1 second = likely auto-clicking)
-        recent_sessions = list(study_sessions.find({"username": username}).limit(50))
+        recent_sessions = list(db.study_sessions.find({"username": username}).limit(50))
         if len(recent_sessions) >= 20:
             avg_time = sum(s.get("response_time", 0) for s in recent_sessions) / len(recent_sessions)
             if avg_time < 1:  # Changed to 1 second
@@ -133,7 +139,8 @@ def get_suspicious_users():
 
 def flag_user(username):
     """Flag a user as suspicious"""
-    users.update_one(
+    db = get_db()
+    db.users.update_one(
         {"_id": username},
         {"$set": {"flagged": True}}
     )
@@ -141,7 +148,8 @@ def flag_user(username):
 
 def unflag_user(username):
     """Remove flag from user"""
-    users.update_one(
+    db = get_db()
+    db.users.update_one(
         {"_id": username},
         {"$set": {"flagged": False}}
     )
@@ -149,7 +157,8 @@ def unflag_user(username):
 
 def reset_user_score(username):
     """Reset a user's score (admin action)"""
-    users.update_one(
+    db = get_db()
+    db.users.update_one(
         {"_id": username},
         {
             "$set": {
@@ -167,4 +176,5 @@ def reset_user_score(username):
 
 def get_leaderboard(limit=10):
     """Get top users by score (exclude flagged)"""
-    return list(users.find({"flagged": {"$ne": True}}).sort("total_score", -1).limit(limit))
+    db = get_db()
+    return list(db.users.find({"flagged": {"$ne": True}}).sort("total_score", -1).limit(limit))
