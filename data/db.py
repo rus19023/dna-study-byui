@@ -2,6 +2,7 @@
 import streamlit as st
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
+import certifi
 
 _client = None
 _db = None
@@ -18,14 +19,13 @@ def get_db():
         mongo_uri = st.secrets["mongo"]["uri"]
         db_name = st.secrets["mongo"]["db_name"]
         
-        # Add SSL/TLS parameters for Streamlit Cloud compatibility
+        # Use certifi for SSL certificates
         _client = MongoClient(
             mongo_uri,
-            serverSelectionTimeoutMS=5000,
-            connectTimeoutMS=5000,
-            socketTimeoutMS=5000,
-            tls=True,
-            tlsAllowInvalidCertificates=False,  # Set to True only for debugging
+            tlsCAFile=certifi.where(),
+            serverSelectionTimeoutMS=30000,
+            connectTimeoutMS=30000,
+            socketTimeoutMS=30000,
         )
         
         # Test the connection
