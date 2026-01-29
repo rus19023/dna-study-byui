@@ -1,24 +1,43 @@
-# db.py
-
-from pymongo import MongoClient
+# data/db.py
 import streamlit as st
+from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
 
-# Read from Streamlit secrets
-MONGO_URI = st.secrets["mongo"]["uri"]
-DB_NAME = st.secrets["mongo"]["db_name"]
+_client = None
+_db = None
 
-
-# Use caching to avoid reconnecting on every Streamlit rerun
-@st.cache_resource
-def get_database():
-    client = MongoClient(MONGO_URI)
-    return client[DB_NAME]
-
-
-db = get_database()
-decks = db.decks
-users = db.users
-sessions = db.sessions
-progress = db.progress
-# Track individual study sessions for anti-cheat
-study_sessions = db.study_sessions  
+def get_db():
+    """Get MongoDB database connection with error handling"""
+    global _client, _db
+    
+    if _db is not None:
+        return _db
+    
+    try:
+        # Get connection string from secrets
+        mongo_uri = st.secrets["mongo"]["uri"]
+        db_name = st.secrets["mongo"]["db_name"]
+        
+        # Add SSL/TLS parameters for Streamlit Cloud compatibility
+        _client = MongoClient(
+            mongo_uri,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+            socketTimeoutMS=5000,
+            tls=True,
+            tlsAllowInvalidCertificates=False,  # Set to True only for debugging
+        )
+        
+        # Test the connection
+        _client.admin.command('ping')
+        _db = _client[db_name]
+        
+        return _db
+        
+    except ServerSelectionTimeoutError as e:
+        st.error("❌ Cannot connect to MongoDB. Please check your connection.")
+        st.error(f"Error: {str(e)}")
+        st.stop()
+    except Exception as e:
+        st.error(f"❌ Database connection error: {str(e)}")
+        st.stop()
