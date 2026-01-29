@@ -178,3 +178,21 @@ def get_leaderboard(limit=10):
     """Get top users by score (exclude flagged)"""
     db = get_db()
     return list(db.users.find({"flagged": {"$ne": True}}).sort("total_score", -1).limit(limit))
+
+
+def make_admin(username):
+    """Make user an admin"""
+    db = get_db()
+    db.users.update_one(
+        {"_id": username},
+        {"$set": {"is_admin": True}}
+    )
+
+
+def remove_admin(username):
+    """Remove admin privileges"""
+    db = get_db()
+    db.users.update_one(
+        {"_id": username},
+        {"$set": {"is_admin": False}}
+    )

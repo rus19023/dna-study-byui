@@ -1,28 +1,70 @@
 # core/state.py
 import streamlit as st
 import random
+import secrets
 
 
 def init_auth_state():
     """Initialize authentication state if not present"""
     if "username" not in st.session_state:
         st.session_state.username = None
+    if "session_token" not in st.session_state:
+        st.session_state.session_token = None
 
 
 def set_user(username):
-    """Set the logged-in user"""
+    """Set the logged-in user with a session token"""
+    # Generate a random session token
+    token = secrets.token_urlsafe(32)
     st.session_state.username = username
+    st.session_state.session_token = token
+    
+    # Store token in query params for persistence
+    st.query_params["session"] = token
+    
+    # Store mapping in session state (in production, use database)
+    if "session_tokens" not in st.session_state:
+        st.session_state.session_tokens = {}
+    st.session_state.session_tokens[token] = username
 
 
 def get_current_user():
     """Get the currently logged-in username or None"""
-    return st.session_state.get("username")
+    # First check session state
+    if st.session_state.get("username"):
+        return st.session_state.username
+    
+    # Check if there's a session token in query params
+    if "session" in st.query_params:
+        token = st.query_params["session"]
+        if "session_tokens" not in st.session_state:
+            st.session_state.session_tokens = {}
+        
+        # Check if token is valid
+        if token in st.session_state.session_tokens:
+            username = st.session_state.session_tokens[token]
+            st.session_state.username = username
+            return username
+    
+    return None
 
 
 def logout_user():
     """Clear user authentication"""
+    # Remove token from mapping
+    if st.session_state.get("session_token"):
+        token = st.session_state.session_token
+        if "session_tokens" in st.session_state and token in st.session_state.session_tokens:
+            del st.session_state.session_tokens[token]
+    
+    # Clear session state
     if "username" in st.session_state:
         del st.session_state.username
+    if "session_token" in st.session_state:
+        del st.session_state.session_token
+    
+    # Clear query params
+    st.query_params.clear()
 
 
 def init_study_state(cards, deck_name=None):
@@ -56,3 +98,4 @@ def reset_study_state():
 def reset_all_state():
     """Clear ALL session state (useful for complete logout/reset)"""
     st.session_state.clear()
+    
