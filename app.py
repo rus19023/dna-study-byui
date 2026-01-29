@@ -38,7 +38,7 @@ st.set_page_config(
     layout="wide"
 )
 
-from core.state import init_state
+from core.state import init_auth_state, init_study_state
 from ui.auth import handle_authentication, show_user_sidebar
 from ui.components import leaderboard, mode_selector
 from ui.study_tab import render_study_tab
@@ -49,6 +49,11 @@ from ui.admin_tab import render_admin_tab
 from data.deck_store import get_deck_names, get_deck
 from data.user_store import get_user, get_leaderboard
 
+
+# ----------------------------
+# Initialize State
+# ----------------------------
+init_auth_state()
 
 # ----------------------------
 # Authentication
@@ -110,7 +115,7 @@ tab_objects = st.tabs(tabs)
 
 # Tab 1: Study
 with tab_objects[0]:
-    render_study_tab(cards, deck_name, logged_in_user, study_mode, init_state)
+    render_study_tab(cards, deck_name, logged_in_user, study_mode, init_study_state)
 
 # Tab 2: Stats
 with tab_objects[1]:
