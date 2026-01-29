@@ -5,7 +5,8 @@ from data.deck_store import (
     get_deck_names,
     find_duplicate_cards,
     delete_card,
-    get_all_cards_with_indices
+    get_all_cards_with_indices,
+    create_deck  # You'll need to add this function to deck_store.py
 )
 
 
@@ -13,9 +14,39 @@ def render_manage_tab():
     """Render the manage decks tab"""
     st.subheader("🗂️ Manage Decks")
     
+    # Create New Deck Section
+    st.subheader("➕ Create New Deck")
+    with st.form("create_deck_form"):
+        new_deck_name = st.text_input("Deck Name:", placeholder="e.g., Biology Chapter 5")
+        submit = st.form_submit_button("Create Deck", type="primary")
+        
+        if submit:
+            if new_deck_name.strip():
+                deck_names = get_deck_names()
+                if new_deck_name.strip() in deck_names:
+                    st.error("A deck with this name already exists!")
+                else:
+                    if create_deck(new_deck_name.strip()):
+                        st.success(f"✓ Deck '{new_deck_name.strip()}' created!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to create deck")
+            else:
+                st.error("Please enter a deck name")
+    
+    st.divider()
+    
+    # Manage Existing Deck Section
+    st.subheader("📝 Manage Existing Deck")
+    
+    deck_names = get_deck_names()
+    if not deck_names:
+        st.info("No decks available. Create one above!")
+        return
+    
     manage_deck = st.selectbox(
         "Select deck to manage:",
-        options=get_deck_names(),
+        options=deck_names,
         key="manage_deck_select"
     )
     
