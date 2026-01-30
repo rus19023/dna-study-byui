@@ -8,8 +8,6 @@ def init_auth_state():
     """Initialize authentication state if not present"""
     if "username" not in st.session_state:
         st.session_state.username = None
-    if "session_token" not in st.session_state:
-        st.session_state.session_token = None
 
 
 def set_user(username):

@@ -1,72 +1,44 @@
 import streamlit as st
 
-# try:
-#     st.set_page_config(
-#         page_title="Debug Test",
-#         page_icon="🧬",
-#     )
-    
-#     st.title("Test 1: Streamlit works!")
-#     st.write("If you see this, basic Streamlit is working.")
-    
-#     # Test MongoDB secrets
-#     st.write("Test 2: Checking secrets...")
-#     if "mongo" in st.secrets:
-#         st.success("✓ MongoDB secrets found")
-#         st.write(f"URI starts with: {st.secrets['mongo']['uri'][:20]}...")
-#     else:
-#         st.error("✗ MongoDB secrets missing!")
-    
-#     # Test MongoDB connection
-#     st.write("Test 3: Connecting to MongoDB...")
-#     from pymongo import MongoClient
-#     client = MongoClient(st.secrets["mongo"]["uri"])
-#     db = client[st.secrets["mongo"]["db_name"]]
-#     count = db.users.count_documents({})
-#     st.success(f"✓ MongoDB connected! Found {count} users")
-    
-# except Exception as e:
-#     import traceback
-#     st.error("CRASH ERROR:")
-#     st.code(traceback.format_exc())
-    
-
-
 st.set_page_config(
     page_title="Flashcard Study",
     page_icon="🧬",
     layout="wide"
 )
 
-from core.state import init_auth_state, init_study_state
-from ui.auth import handle_authentication, show_user_sidebar
+from streamlit_auth import (
+    init_auth,
+    render_sidebar_auth,
+    render_admin_panel,
+    get_current_user,
+    get_user_data
+)
+
+# Your existing imports
+from core.state import init_study_state
 from ui.components import leaderboard, mode_selector
 from ui.study_tab import render_study_tab
 from ui.stats_tab import render_stats_tab
 from ui.add_card_tab import render_add_card_tab
 from ui.manage_tab import render_manage_tab
-from ui.admin_tab import render_admin_tab
 from data.deck_store import get_deck_names, get_deck
-from data.user_store import get_user, get_leaderboard
+from data.user_store import get_leaderboard
 
 
 # ----------------------------
-# Initialize State
+# Initialize Authentication
 # ----------------------------
-init_auth_state()
+init_auth()
 
-# ----------------------------
-# Authentication
-# ----------------------------
-logged_in_user = handle_authentication()
+# Handle authentication in sidebar
+logged_in_user = render_sidebar_auth()
 
 if not logged_in_user:
     st.title("🧬 Flashcard Study App")
     st.info("Please login or register in the sidebar to continue.")
     st.stop()
 
-# Show user sidebar with logout button
-show_user_sidebar(logged_in_user)
+# User is logged in
 st.sidebar.divider()
 
 # Study mode selector
@@ -88,8 +60,9 @@ st.sidebar.divider()
 # ----------------------------
 st.title("🧬 Flashcard Study App")
 
-current_user = get_user(logged_in_user)
-if not current_user:
+# Get user data from auth module
+user_data = get_user_data()
+if not user_data:
     st.error("User not found")
     st.stop()
 
@@ -104,37 +77,43 @@ if "current_deck" not in st.session_state or st.session_state.current_deck != de
 cards = get_deck(deck_name)
 
 
+# app.py - Update the Tabs section
+
 # ----------------------------
 # Tabs
 # ----------------------------
-tabs = ["📚 Study", "📊 Stats", "🏆 Leaderboard", "➕ Add Card", "🗂️ Manage Decks"]
-if current_user.get("is_admin", False):
-    tabs.append("🛡️ Admin")
+# Base tabs for all users
+tabs = ["📚 Study", "📊 Stats", "🏆 Leaderboard"]
+
+# Add admin-only tabs
+if user_data.get("is_admin", False):
+    tabs.extend(["➕ Add Card", "🗂️ Manage Decks", "🛡️ Admin"])
 
 tab_objects = st.tabs(tabs)
 
-# Tab 1: Study
+# Tab 1: Study (always available)
 with tab_objects[0]:
     render_study_tab(cards, deck_name, logged_in_user, study_mode, init_study_state)
 
-# Tab 2: Stats
+# Tab 2: Stats (always available)
 with tab_objects[1]:
-    render_stats_tab(current_user)
+    render_stats_tab(user_data)
 
-# Tab 3: Leaderboard
+# Tab 3: Leaderboard (always available)
 with tab_objects[2]:
     top_users = get_leaderboard(limit=10)
     leaderboard(top_users)
 
-# Tab 4: Add Card
-with tab_objects[3]:
-    render_add_card_tab()
-
-# Tab 5: Manage Decks
-with tab_objects[4]:
-    render_manage_tab()
-
-# Tab 6: Admin (if user is admin)
-if current_user.get("is_admin", False):
+# Admin-only tabs
+if user_data.get("is_admin", False):
+    # Tab 4: Add Card (admin only)
+    with tab_objects[3]:
+        render_add_card_tab()
+    
+    # Tab 5: Manage Decks (admin only)
+    with tab_objects[4]:
+        render_manage_tab()
+    
+    # Tab 6: Admin Panel (admin only)
     with tab_objects[5]:
-        render_admin_tab()
+        render_admin_panel()

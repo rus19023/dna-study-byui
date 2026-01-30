@@ -112,30 +112,35 @@ def timer_display(start_time, min_delay):
         return True
 
 
+# ui/components.py - Update user_stats function
+
 def user_stats(user_data):
     """Display user statistics"""
     col1, col2, col3, col4 = st.columns(4)
-    total = user_data["cards_studied"]
-    accuracy = (user_data["correct_answers"] / total * 100) if total > 0 else 0
+    
+    total = user_data.get("cards_studied", 0)  # ← Use .get() with default
+    correct = user_data.get("correct_answers", 0)
+    accuracy = (correct / total * 100) if total > 0 else 0
+    
     with col1:
-        st.metric("Total Score", user_data["total_score"])
+        st.metric("Total Score", user_data.get("total_score", 0))
     with col2:
         st.metric("Cards Studied", total)
     with col3:
         st.metric("Accuracy", f"{accuracy:.1f}%")
     with col4:
-        st.metric("Current Streak", user_data["current_streak"])
+        st.metric("Current Streak", user_data.get("current_streak", 0))
+    
     # Verification stats if available
-    verif_total = user_data.get(
-            "verification_passed", 
-            0
-        ) + user_data.get("verification_failed", 0)
+    verif_passed = user_data.get("verification_passed", 0)
+    verif_failed = user_data.get("verification_failed", 0)
+    verif_total = verif_passed + verif_failed
+    
     if verif_total > 0:
-        verif_accuracy = (
-                user_data.get("verification_passed", 0) / verif_total * 100)
+        verif_accuracy = (verif_passed / verif_total * 100)
         st.caption(
             f"Verification Accuracy: {verif_accuracy:.1f}% "
-            f"({user_data.get('verification_passed', 0)}/{verif_total})"
+            f"({verif_passed}/{verif_total})"
         )
 
 
