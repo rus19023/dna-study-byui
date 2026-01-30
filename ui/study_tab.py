@@ -17,7 +17,28 @@ def render_study_tab(cards, deck_name, username, study_mode, init_state_func):
     """Render the study flashcards tab"""
     
     if not cards:
-        st.warning(f"The deck is empty. Add some cards in the 'Add Card' tab!")
+        st.warning(f"The deck '{deck_name}' is empty!")
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.info("📧 Need cards? Contact an admin to add some.")
+        
+        # Get admin email
+        from streamlit_auth.core import get_auth_db
+        db = get_auth_db()
+        admin_users = [u for u in db.get_all_users() if u.get("is_admin")]
+        
+        if admin_users and admin_users[0].get("email"):
+            admin_email = admin_users[0]["email"]
+            subject = f"Request: Add cards to '{deck_name}' deck"
+            body = f"Hi,\n\nCould you please add flashcards to '{deck_name}'?\n\nThanks,\n{logged_in_user}"
+            mailto = f"mailto:{admin_email}?subject={subject.replace(' ', '%20')}&body=body.replace(' ', '%20').replace('\n', '%0A')"
+            
+            with col2:
+                st.link_button("✉️ Email Admin", mailto)
+        else:
+            st.caption("💬 Please contact an admin to add cards")
+        
         return
     
     init_state_func(cards)
