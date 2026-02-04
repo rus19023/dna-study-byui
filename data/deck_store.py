@@ -191,3 +191,4 @@ def get_all_cards_with_indices(deck_name):
         }
         for idx, card in enumerate(doc["cards"])
     ]
+    
