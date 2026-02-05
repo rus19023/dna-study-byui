@@ -96,7 +96,7 @@ if not deck_names:
     st.stop()
 
 # Set your preferred default deck
-default_deck = "Week 4 - Identity: DNA Profiling - Step 1"  # Change this to your deck name
+default_deck = "Exam 2 Study - Weeks 4-5"  # Change this to your deck name
 
 # Find the index of the default deck, or use 0 if not found
 default_index = deck_names.index(default_deck) if default_deck in deck_names else 0
