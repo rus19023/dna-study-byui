@@ -18,7 +18,7 @@ def render_sidebar_auth(config=None):
         if user_data.get("is_admin"):
             st.sidebar.caption("🛡️ Admin")
         
-        if st.sidebar.button("🚪 Logout", use_container_width=True):
+        if st.sidebar.button("🚪 Logout", width="stretch"):
             logout_user()
             st.rerun()
         
@@ -40,7 +40,7 @@ def render_sidebar_auth(config=None):
         with st.sidebar.form("login_form"):
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Login", use_container_width=True, type="primary")
+            submit = st.form_submit_button("Login", width="stretch", type="primary")
             
             if submit:
                 if username.strip() and password.strip():
@@ -59,7 +59,7 @@ def render_sidebar_auth(config=None):
                 email = st.text_input("Email")
             password = st.text_input("Password", type="password")
             confirm = st.text_input("Confirm Password", type="password")
-            submit = st.form_submit_button("Register", use_container_width=True, type="primary")
+            submit = st.form_submit_button("Register", width="stretch", type="primary")
             
             if submit:
                 if not username.strip() or not password.strip():
@@ -101,7 +101,7 @@ def render_login_page(config=None):
             with st.form("login_form"):
                 username = st.text_input("Username")
                 password = st.text_input("Password", type="password")
-                submit = st.form_submit_button("Login", use_container_width=True, type="primary")
+                submit = st.form_submit_button("Login", width="stretch", type="primary")
                 
                 if submit:
                     if username.strip() and password.strip():
@@ -119,7 +119,7 @@ def render_login_page(config=None):
                         email = st.text_input("Email")
                     password = st.text_input("Password", type="password", key="reg_pass")
                     confirm = st.text_input("Confirm Password", type="password")
-                    submit = st.form_submit_button("Register", use_container_width=True, type="primary")
+                    submit = st.form_submit_button("Register", width="stretch", type="primary")
                     
                     if submit:
                         if password != confirm:

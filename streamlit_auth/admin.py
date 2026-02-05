@@ -40,7 +40,7 @@ def render_admin_panel(config=None):
             "Active": "✅" if user.get("is_active", True) else "❌"
         })
     
-    st.dataframe(user_data, use_container_width=True)
+    st.dataframe(user_data, width="stretch")
     
     st.divider()
     
@@ -59,24 +59,24 @@ def render_admin_panel(config=None):
         
         with col1:
             if user.get("is_admin"):
-                if st.button("Remove Admin", use_container_width=True):
+                if st.button("Remove Admin", width="stretch"):
                     db.remove_admin(selected_user)
                     st.success(f"Removed admin from {selected_user}")
                     st.rerun()
             else:
-                if st.button("Make Admin", use_container_width=True):
+                if st.button("Make Admin", width="stretch"):
                     db.make_admin(selected_user)
                     st.success(f"Made {selected_user} an admin")
                     st.rerun()
         
         with col2:
-            if st.button("Reset Score", use_container_width=True):
+            if st.button("Reset Score", width="stretch"):
                 db.update_user(selected_user, {"total_score": 0})
                 st.success(f"Reset score for {selected_user}")
                 st.rerun()
         
         with col3:
-            if st.button("Delete User", type="secondary", use_container_width=True):
+            if st.button("Delete User", type="secondary", width="stretch"):
                 if st.session_state.get("confirm_delete") == selected_user:
                     db.delete_user(selected_user)
                     st.success(f"Deleted {selected_user}")

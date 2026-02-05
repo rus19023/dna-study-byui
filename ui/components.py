@@ -29,14 +29,14 @@ def controls():
     col1, col2 = st.columns(2)
     
     with col1:
-        if st.button("🔄 Flip", key="flip_btn", use_container_width=True):
+        if st.button("🔄 Flip", key="flip_btn", width="stretch"):
             #st.write(f"DEBUG: Before flip - show_answer={st.session_state.show_answer}, index={st.session_state.index}")
             st.session_state.show_answer = not st.session_state.show_answer
             #st.write(f"DEBUG: After flip - show_answer={st.session_state.show_answer}, index={st.session_state.index}")
             st.rerun()
     
     with col2:
-        if st.button("➡️ Next", key="next_btn", use_container_width=True):
+        if st.button("➡️ Next", key="next_btn", width="stretch"):
             #st.write(f"DEBUG: Next clicked - index={st.session_state.index}")
             st.session_state.index = (st.session_state.index + 1) % len(st.session_state.cards)
             st.session_state.show_answer = False
@@ -52,7 +52,7 @@ def answer_buttons(on_correct, on_incorrect, disabled=False):
             "✓ Got it!", 
             key="correct_btn", 
             on_click=on_correct, 
-            use_container_width=True, 
+            width="stretch", 
             type="primary", 
             disabled=disabled
         )
@@ -61,7 +61,7 @@ def answer_buttons(on_correct, on_incorrect, disabled=False):
             "✗ Need practice", 
             key="incorrect_btn", 
             on_click=on_incorrect, 
-            use_container_width=True, 
+            width="stretch", 
             disabled=disabled
         )
 
@@ -74,7 +74,7 @@ def commit_buttons(on_know, on_dont_know):
             "✓ I know this", 
             key="know_btn", 
             on_click=on_know, 
-            use_container_width=True, 
+            width="stretch", 
             type="primary"
         )
     with col2:
@@ -82,7 +82,7 @@ def commit_buttons(on_know, on_dont_know):
             "✗ I don't know", 
             key="dont_know_btn", 
             on_click=on_dont_know, 
-            use_container_width=True
+            width="stretch"
         )
 
 
@@ -92,7 +92,7 @@ def quiz_input(on_submit):
         user_answer = st.text_input("Your answer:", key="quiz_input")
         submitted = st.form_submit_button(
             "Submit Answer", 
-            use_container_width=True, 
+            width="stretch", 
             type="primary"
         )   
         if submitted:
@@ -173,7 +173,7 @@ def leaderboard(users_list):
     # Display as dataframe
     import pandas as pd
     df = pd.DataFrame(leaderboard_data)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
 
 
 def mode_selector():
@@ -208,7 +208,7 @@ def multiple_choice_buttons(options, on_answer):
             if st.button(
                 f"{chr(65 + idx)}. {option}", 
                 key=f"mc_option_{idx}",
-                use_container_width=True
+                width="stretch"
             ):
                 on_answer(idx)
 
@@ -217,10 +217,10 @@ def true_false_buttons(on_answer):
     """Display true/false buttons"""
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("✓ TRUE", key="tf_true", use_container_width=True, type="primary"):
+        if st.button("✓ TRUE", key="tf_true", width="stretch", type="primary"):
             on_answer(True)
     with col2:
-        if st.button("✗ FALSE", key="tf_false", use_container_width=True):
+        if st.button("✗ FALSE", key="tf_false", width="stretch"):
             on_answer(False)
 
 

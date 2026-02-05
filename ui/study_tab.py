@@ -119,7 +119,7 @@ def _handle_commit_mode():
         
         commit_buttons(on_know=commit_know, on_dont_know=commit_dont_know)
     else:
-        if st.button("🔄 Reveal Answer", use_container_width=True):
+        if st.button("🔄 Reveal Answer", width="stretch"):
             st.session_state.show_answer = True
             st.rerun()
 
@@ -161,7 +161,7 @@ def _show_quiz_result():
     else:
         st.error(f"✗ Incorrect. You answered: {result['user_answer']}")
     
-    if st.button("➡️ Next Card", use_container_width=True):
+    if st.button("➡️ Next Card", width="stretch"):
         _next_card()
 
 

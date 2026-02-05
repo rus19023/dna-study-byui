@@ -36,7 +36,7 @@ def handle_authentication():
         if st.sidebar.button(
             "Login", 
             type="primary", 
-            use_container_width=True
+            width="stretch"
         ):
             if username.strip() and password.strip():
                 user = get_user(username.strip())
@@ -68,7 +68,7 @@ def handle_authentication():
         if st.sidebar.button(
             "Register",
             type="primary",
-            use_container_width=True
+            width="stretch"
         ):
             if new_username.strip() and new_password.strip():
                 if new_password != confirm_password:
@@ -92,7 +92,7 @@ def show_user_sidebar(username):
   
     if st.sidebar.button(
         "🚪 Logout", 
-        use_container_width=True,
+        width="stretch",
         type="secondary"
     ):
         # Use state management function
