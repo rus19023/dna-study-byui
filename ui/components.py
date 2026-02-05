@@ -9,7 +9,7 @@ def flashcard_box(text):
     st.markdown(
         f"""
         <div style="
-            font-size:24px;
+            font-size:20px;
             padding:20px;
             border-radius:10px;
             border:2px solid #ddd;
@@ -104,7 +104,7 @@ def timer_display(start_time, min_delay):
     remaining = max(0, min_delay - elapsed)
     if remaining > 0:
         st.warning(
-                f"⏳ Please wait {remaining:.1f} seconds before answering..."
+                f"⏳ If you are not a bot, please wait {remaining:.1f} seconds before answering..."
             )
         return False
     else:
