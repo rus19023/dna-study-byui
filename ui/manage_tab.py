@@ -116,52 +116,52 @@ def render_manage_tab():
         tab1, tab2 = st.tabs(["📝 Edit Cards", "🗑️ Delete Cards"])
         
         with tab1:
-    st.subheader("Edit Card")
-    
-    # Select card to edit
-    card_options = [f"#{c['index']}: {c['question'][:50]}..." for c in cards]
-    selected_card_str = st.selectbox(
-        "Select card to edit",
-        options=card_options,
-        key="edit_card_selector"
-    )
-    
-    if selected_card_str:
-        # Extract index
-        card_index = int(selected_card_str.split(":")[0].replace("#", ""))
-        
-        # Find the actual card with this index (don't use list position!)
-        card = next((c for c in cards if c['index'] == card_index), None)
-        
-        if card:
-            st.write(f"**Editing card #{card_index}**")
+            st.subheader("Edit Card")
             
-            # Edit form
-            with st.form(key=f"edit_form_{card_index}"):
-                new_question = st.text_area(
-                    "Question",
-                    value=card['question'],
-                    height=100,
-                    key=f"edit_q_{card_index}"
-                )
-                new_answer = st.text_area(
-                    "Answer",
-                    value=card['answer'],
-                    height=150,
-                    key=f"edit_a_{card_index}"
-                )
+            # Select card to edit
+            card_options = [f"#{c['index']}: {c['question'][:50]}..." for c in cards]
+            selected_card_str = st.selectbox(
+                "Select card to edit",
+                options=card_options,
+                key="edit_card_selector"
+            )
+            
+            if selected_card_str:
+                # Extract index
+                card_index = int(selected_card_str.split(":")[0].replace("#", ""))
                 
-                submitted = st.form_submit_button("💾 Save Changes", type="primary")
+                # Find the actual card with this index (don't use list position!)
+                card = next((c for c in cards if c['index'] == card_index), None)
                 
-                if submitted:
-                    if new_question.strip() and new_answer.strip():
-                        if edit_card(selected_deck, card_index, new_question, new_answer):
-                            st.success(f"✅ Updated card #{card_index}")
-                            st.rerun()
-                        else:
-                            st.error("❌ Failed to update card")
-                    else:
-                        st.warning("Question and answer cannot be empty")
+                if card:
+                    st.write(f"**Editing card #{card_index}**")
+                    
+                    # Edit form
+                    with st.form(key=f"edit_form_{card_index}"):
+                        new_question = st.text_area(
+                            "Question",
+                            value=card['question'],
+                            height=100,
+                            key=f"edit_q_{card_index}"
+                        )
+                        new_answer = st.text_area(
+                            "Answer",
+                            value=card['answer'],
+                            height=150,
+                            key=f"edit_a_{card_index}"
+                        )
+                        
+                        submitted = st.form_submit_button("💾 Save Changes", type="primary")
+                        
+                        if submitted:
+                            if new_question.strip() and new_answer.strip():
+                                if edit_card(selected_deck, card_index, new_question, new_answer):
+                                    st.success(f"✅ Updated card #{card_index}")
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Failed to update card")
+                            else:
+                                st.warning("Question and answer cannot be empty")
                         
         with tab2:
             st.subheader("Delete Card")
