@@ -6,6 +6,52 @@ st.set_page_config(
     layout="wide"
 )
 
+
+st.markdown("""
+    <style>
+    /* Text inputs and text areas */
+    input[type="text"], 
+    textarea,
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border: 2px solid #4CAF50 !important;
+        border-radius: 5px !important;
+    }
+    
+    /* Selectboxes/Dropdowns */
+    .stSelectbox > div > div > div[data-baseweb="select"] {
+        border: 2px solid #2196F3 !important;
+        border-radius: 5px !important;
+    }
+    
+    /* Hide the search input inside dropdowns or style it differently */
+    [data-baseweb="select"] input {
+        border: 1px solid #ccc !important;
+        background-color: #f5f5f5 !important;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        border: 2px solid #FF9800 !important;
+        border-radius: 5px !important;
+    }
+    
+    /* Number inputs */
+    .stNumberInput > div > div > input {
+        border: 2px solid #9C27B0 !important;
+        border-radius: 5px !important;
+    }
+    
+    /* Forms */
+    [data-testid="stForm"] {
+        border: 3px solid #FF5722 !important;
+        border-radius: 10px !important;
+        padding: 20px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
 from streamlit_auth import (
     init_auth,
     render_sidebar_auth,
@@ -39,11 +85,9 @@ if not logged_in_user:
     st.stop()
 
 # User is logged in
-st.sidebar.divider()
 
 # Study mode selector
 study_mode = mode_selector()
-st.sidebar.divider()
 
 # Deck selection
 deck_names = get_deck_names()
@@ -51,8 +95,17 @@ if not deck_names:
     st.error("No decks found in database.")
     st.stop()
 
-deck_name = st.sidebar.selectbox("Choose a deck", options=deck_names)
-st.sidebar.divider()
+# Set your preferred default deck
+default_deck = "Week 4 - Identity: DNA Profiling - Step 1"  # Change this to your deck name
+
+# Find the index of the default deck, or use 0 if not found
+default_index = deck_names.index(default_deck) if default_deck in deck_names else 0
+
+deck_name = st.sidebar.selectbox(
+    "Choose a deck", 
+    options=deck_names,
+    index=default_index  # This sets which deck shows first
+)
 
 
 # ----------------------------
@@ -66,15 +119,15 @@ if not user_data:
     st.error("User not found")
     st.stop()
 
-st.divider()
-
 # Track deck changes
 if "current_deck" not in st.session_state or st.session_state.current_deck != deck_name:
     st.session_state.current_deck = deck_name
     if "cards" in st.session_state:
         del st.session_state.cards
 
-cards = get_deck(deck_name)
+# Store cards in session state so callbacks can access them
+st.session_state.cards = get_deck(deck_name)
+cards = st.session_state.cards
 
 
 # app.py - Update the Tabs section

@@ -21,7 +21,7 @@ def render_study_tab(cards, deck_name, username, study_mode, init_state_func):
         
         col1, col2 = st.columns([3, 1])
         with col1:
-            st.info("📧 Need cards? Contact an admin to add some.")
+            st.info("🔧 Need cards? Contact an admin to add some.")
         
         # Get admin email
         from streamlit_auth.core import get_auth_db
@@ -31,17 +31,22 @@ def render_study_tab(cards, deck_name, username, study_mode, init_state_func):
         if admin_users and admin_users[0].get("email"):
             admin_email = admin_users[0]["email"]
             subject = f"Request: Add cards to '{deck_name}' deck"
-            body = f"Hi,\n\nCould you please add flashcards to '{deck_name}'?\n\nThanks,\n{logged_in_user}"
-            mailto = f"mailto:{admin_email}?subject={subject.replace(' ', '%20')}&body=body.replace(' ', '%20').replace('\n', '%0A')"
+            body = f"Hi,\n\nCould you please add flashcards to '{deck_name}'?\n\nThanks,\n{username}"
+            
+            # Do the encoding outside the f-string
+            subject_encoded = subject.replace(' ', '%20')
+            body_encoded = body.replace(' ', '%20').replace('\n', '%0A')
+            mailto = f"mailto:{admin_email}?subject={subject_encoded}&body={body_encoded}"
             
             with col2:
                 st.link_button("✉️ Email Admin", mailto)
         else:
             st.caption("💬 Please contact an admin to add cards")
         
-        return
+        return  # STOP HERE if no cards
     
-    init_state_func(cards)
+    # Only runs if we have cards
+    init_state_func(cards, deck_name)
     mode_config = get_mode_config(study_mode)
     
     # Initialize session variables
@@ -53,6 +58,11 @@ def render_study_tab(cards, deck_name, username, study_mode, init_state_func):
         st.session_state.committed_answer = None
     if "is_verification" not in st.session_state:
         st.session_state.is_verification = random.random() < mode_config["verification_rate"]
+        
+    
+    
+    # Add deck title at the top
+    st.subheader(f"📚 Studying: {deck_name}")
 
     card = st.session_state.cards[st.session_state.index]
     
@@ -60,22 +70,41 @@ def render_study_tab(cards, deck_name, username, study_mode, init_state_func):
     if st.session_state.is_verification:
         st.info("🔍 This is a verification question - answer will be checked!")
     
-    # Display question
-    if not st.session_state.show_answer:
-        flashcard_box(card["question"])
+    # Debug output
+    #st.write(f"DEBUG: show_answer = {st.session_state.show_answer}")
+    
+    # SIMPLE FLASHCARD MODE (no commit, no typing, no verification)
+    if not mode_config["requires_commit"] and not mode_config["requires_typing"] and not st.session_state.is_verification:
+        # Show question or answer
+        if st.session_state.show_answer:
+            flashcard_box(card["answer"])
+        else:
+            flashcard_box(card["question"])
         
-        if mode_config["requires_commit"]:
+        # Always show controls in flashcard mode
+        controls()
+    
+    # COMMIT MODE
+    elif mode_config["requires_commit"]:
+        if not st.session_state.show_answer:
+            flashcard_box(card["question"])
             _handle_commit_mode()
-        elif mode_config["requires_typing"] or st.session_state.is_verification:
+        else:
+            flashcard_box(card["answer"])
+            _handle_commit_verification(card, deck_name, username, study_mode, mode_config)
+    
+    # QUIZ/TYPING MODE
+    else:
+        if not st.session_state.show_answer:
+            flashcard_box(card["question"])
             _handle_quiz_mode(card, deck_name, username, study_mode)
         else:
-            controls()
-    else:
-        _handle_answer_display(card, deck_name, username, study_mode, mode_config)
+            flashcard_box(card["answer"])
+            _show_quiz_result()
 
     st.write(f"Card {st.session_state.index + 1} of {len(st.session_state.cards)}")
     st.write(f"Session Streak: {st.session_state.session_streak} 🔥")
-
+    
 
 def _handle_commit_mode():
     """Handle commit-before-reveal mode"""
@@ -162,16 +191,9 @@ def _handle_commit_verification(card, deck_name, username, study_mode, mode_conf
 
 def _handle_regular_mode(card, deck_name, username, study_mode):
     """Handle regular flashcard mode"""
-    def handle_correct():
-        _record_answer(card, deck_name, username, study_mode, True)
-        _next_card()
-    
-    def handle_incorrect():
-        _record_answer(card, deck_name, username, study_mode, False)
-        _next_card()
-    
-    answer_buttons(on_correct=handle_correct, on_incorrect=handle_incorrect)
-
+    # Don't show answer buttons in basic flashcard mode
+    # The controls (flip/next) handle navigation
+    pass
 
 def _record_answer(card, deck_name, username, study_mode, correct):
     """Record answer and update score"""
@@ -188,16 +210,14 @@ def _record_answer(card, deck_name, username, study_mode, correct):
 
 def _next_card():
     """Move to next card and reset state"""
-    st.session_state.index = (st.session_state.index + 1) % len(
-        st.session_state.cards)
+    st.session_state.index = (st.session_state.index + 1) % len(st.session_state.cards)
     st.session_state.show_answer = False
     st.session_state.card_start_time = time.time()
     st.session_state.committed_answer = None
     from core.study_modes import get_mode_config, STUDY_MODES
     mode_key = st.session_state.get("study_mode", "flashcard")
     mode_config = get_mode_config(mode_key)
-    st.session_state.is_verification = random.random() < mode_config[
-        "verification_rate"]
+    st.session_state.is_verification = random.random() < mode_config["verification_rate"]
     
     if "quiz_result" in st.session_state:
         del st.session_state.quiz_result

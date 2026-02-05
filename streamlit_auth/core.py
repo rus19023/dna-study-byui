@@ -3,10 +3,12 @@
 import streamlit as st
 from typing import Optional, Callable
 from functools import wraps
+import hashlib
+import time
 
 
 # Import from the auth module's database, NOT data/db.py
-from .database import AuthDatabase  # ← Make sure this is here
+from .database import AuthDatabase
 from .config import AuthConfig
 
 
@@ -26,8 +28,46 @@ def get_auth_db(config=None):
     return _auth_db
 
 
+def _create_session_token(username: str) -> str:
+    """Create a simple session token"""
+    timestamp = str(int(time.time()))
+    return hashlib.sha256(f"{username}:{timestamp}".encode()).hexdigest()[:16]
+
+
+def _persist_login(username: str):
+    """Store login token in session state with timestamp"""
+    token = _create_session_token(username)
+    st.session_state['auth_token'] = token
+    st.session_state['auth_username'] = username
+    st.session_state['auth_timestamp'] = time.time()
+
+
+def _check_persisted_login() -> Optional[str]:
+    """Check if user has a valid persisted session"""
+    if 'auth_token' in st.session_state and 'auth_username' in st.session_state:
+        # Check if session is still valid (7 days)
+        timestamp = st.session_state.get('auth_timestamp', 0)
+        if time.time() - timestamp < (7 * 24 * 3600):  # 7 days
+            return st.session_state['auth_username']
+    return None
+
+
 def init_auth(config=None):
     """Initialize authentication system"""
+    # Check for persisted login first
+    if "username" not in st.session_state:
+        persisted_user = _check_persisted_login()
+        if persisted_user:
+            # Restore session from persisted login
+            db = get_auth_db(config)
+            user = db.get_user(persisted_user)
+            if user and user.get("is_active", True):
+                st.session_state.username = persisted_user
+                st.session_state.user_data = user
+            else:
+                # Invalid session, clear it
+                _clear_persisted_login()
+    
     if "username" not in st.session_state:
         st.session_state.username = None
     if "user_data" not in st.session_state:
@@ -45,9 +85,20 @@ def login_user(username: str, password: str) -> bool:
     if user:
         st.session_state.username = username
         st.session_state.user_data = user
+        _persist_login(username)  # Persist the login
         return True
     
     return False
+
+
+def _clear_persisted_login():
+    """Clear persisted login data"""
+    if 'auth_token' in st.session_state:
+        del st.session_state.auth_token
+    if 'auth_username' in st.session_state:
+        del st.session_state.auth_username
+    if 'auth_timestamp' in st.session_state:
+        del st.session_state.auth_timestamp
 
 
 def logout_user():
@@ -56,6 +107,7 @@ def logout_user():
         del st.session_state.username
     if "user_data" in st.session_state:
         del st.session_state.user_data
+    _clear_persisted_login()
 
 
 def get_current_user() -> Optional[str]:

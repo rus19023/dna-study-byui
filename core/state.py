@@ -81,8 +81,13 @@ def init_study_state(cards, deck_name=None):
         st.session_state.cards = list(cards)
         random.shuffle(st.session_state.cards)
         st.session_state.index = 0
-        st.session_state.show_answer = False
         st.session_state.current_deck = deck_name
+    
+    # Always initialize these if they don't exist (but don't reset if they do)
+    if "show_answer" not in st.session_state:
+        st.session_state.show_answer = False
+    if "index" not in st.session_state:
+        st.session_state.index = 0
 
 
 def reset_study_state():

@@ -2,7 +2,6 @@
 
 import streamlit as st
 import time
-from core.flashcard_logic import flip_card, next_card
 
 
 def flashcard_box(text):
@@ -26,43 +25,43 @@ def flashcard_box(text):
 
 
 def controls():
+    """Flip and Next controls for basic flashcard mode"""
     col1, col2 = st.columns(2)
+    
     with col1:
-        st.button(
-                "🔄 Flip", 
-                key="flip_btn", 
-                on_click=flip_card, 
-                use_container_width=True
-            )
+        if st.button("🔄 Flip", key="flip_btn", use_container_width=True):
+            #st.write(f"DEBUG: Before flip - show_answer={st.session_state.show_answer}, index={st.session_state.index}")
+            st.session_state.show_answer = not st.session_state.show_answer
+            #st.write(f"DEBUG: After flip - show_answer={st.session_state.show_answer}, index={st.session_state.index}")
+    
     with col2:
-        st.button(
-                "➡️ Next", 
-                key="next_btn", 
-                on_click=next_card, 
-                use_container_width=True
-            )
-
+        if st.button("➡️ Next", key="next_btn", use_container_width=True):
+            #st.write(f"DEBUG: Next clicked - index={st.session_state.index}")
+            st.session_state.index = (st.session_state.index + 1) % len(st.session_state.cards)
+            st.session_state.show_answer = False
+            #st.write(f"DEBUG: After next - index={st.session_state.index}")
+            
 
 def answer_buttons(on_correct, on_incorrect, disabled=False):
     """Show Got it / Need practice buttons after flipping"""
     col1, col2 = st.columns(2)
     with col1:
         st.button(
-                "✓ Got it!", 
-                key="correct_btn", 
-                on_click=on_correct, 
-                use_container_width=True, 
-                type="primary", 
-                disabled=disabled
-            )
+            "✓ Got it!", 
+            key="correct_btn", 
+            on_click=on_correct, 
+            use_container_width=True, 
+            type="primary", 
+            disabled=disabled
+        )
     with col2:
         st.button(
-                "✗ Need practice", 
-                key="incorrect_btn", 
-                on_click=on_incorrect, 
-                use_container_width=True, 
-                disabled=disabled
-            )
+            "✗ Need practice", 
+            key="incorrect_btn", 
+            on_click=on_incorrect, 
+            use_container_width=True, 
+            disabled=disabled
+        )
 
 
 def commit_buttons(on_know, on_dont_know):
@@ -70,19 +69,19 @@ def commit_buttons(on_know, on_dont_know):
     col1, col2 = st.columns(2)
     with col1:
         st.button(
-                "✓ I know this", 
-                key="know_btn", 
-                on_click=on_know, 
-                use_container_width=True, 
-                type="primary"
-            )
+            "✓ I know this", 
+            key="know_btn", 
+            on_click=on_know, 
+            use_container_width=True, 
+            type="primary"
+        )
     with col2:
         st.button(
-                "✗ I don't know", 
-                key="dont_know_btn", 
-                on_click=on_dont_know, 
-                use_container_width=True
-            )
+            "✗ I don't know", 
+            key="dont_know_btn", 
+            on_click=on_dont_know, 
+            use_container_width=True
+        )
 
 
 def quiz_input(on_submit):
@@ -90,10 +89,10 @@ def quiz_input(on_submit):
     with st.form("quiz_answer_form", clear_on_submit=True):
         user_answer = st.text_input("Your answer:", key="quiz_input")
         submitted = st.form_submit_button(
-                "Submit Answer", 
-                use_container_width=True, 
-                type="primary"
-            )   
+            "Submit Answer", 
+            use_container_width=True, 
+            type="primary"
+        )   
         if submitted:
             on_submit(user_answer)
 
@@ -104,21 +103,19 @@ def timer_display(start_time, min_delay):
     remaining = max(0, min_delay - elapsed)
     if remaining > 0:
         st.warning(
-                f"⏳ If you are not a bot, please wait {remaining:.1f} seconds before answering..."
-            )
+            f"⏳ If you are not a bot, please wait {remaining:.1f} seconds before answering..."
+        )
         return False
     else:
         st.success("✅ You can answer now")
         return True
 
 
-# ui/components.py - Update user_stats function
-
 def user_stats(user_data):
     """Display user statistics"""
     col1, col2, col3, col4 = st.columns(4)
     
-    total = user_data.get("cards_studied", 0)  # ← Use .get() with default
+    total = user_data.get("cards_studied", 0)
     correct = user_data.get("correct_answers", 0)
     accuracy = (correct / total * 100) if total > 0 else 0
     
@@ -150,6 +147,7 @@ def leaderboard(users_list):
     if not users_list:
         st.info("No users yet. Be the first to study!")
         return
+    
     # Prepare data for table
     leaderboard_data = []
     for idx, user in enumerate(users_list, 1):
@@ -197,8 +195,6 @@ def mode_selector():
     
     return selected_mode
 
-
-# Add to ui/components.py
 
 def multiple_choice_buttons(options, on_answer):
     """Display multiple choice buttons"""

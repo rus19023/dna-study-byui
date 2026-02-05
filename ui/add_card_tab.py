@@ -29,7 +29,7 @@ def render_add_card_tab():
     if deck_option == "Create new deck":
         add_to_deck = st.text_input("New deck name:", key="new_deck_name")
     
-    with st.form("add_card_form"):
+    with st.form("add_card_form", clear_on_submit=True):
         new_question = st.text_area("Question", height=100)
         new_answer = st.text_area("Answer", height=100)
 
