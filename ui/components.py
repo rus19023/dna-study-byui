@@ -33,6 +33,7 @@ def controls():
             #st.write(f"DEBUG: Before flip - show_answer={st.session_state.show_answer}, index={st.session_state.index}")
             st.session_state.show_answer = not st.session_state.show_answer
             #st.write(f"DEBUG: After flip - show_answer={st.session_state.show_answer}, index={st.session_state.index}")
+            st.rerun()
     
     with col2:
         if st.button("➡️ Next", key="next_btn", use_container_width=True):
@@ -40,6 +41,7 @@ def controls():
             st.session_state.index = (st.session_state.index + 1) % len(st.session_state.cards)
             st.session_state.show_answer = False
             #st.write(f"DEBUG: After next - index={st.session_state.index}")
+            st.rerun()
             
 
 def answer_buttons(on_correct, on_incorrect, disabled=False):

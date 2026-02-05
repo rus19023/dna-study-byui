@@ -1,6 +1,7 @@
 # ui/add_card_tab.py
 
 import streamlit as st
+import base64
 from data.deck_store import get_deck_names, add_card
 
 
