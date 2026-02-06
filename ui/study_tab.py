@@ -73,15 +73,13 @@ def render_study_tab(cards, deck_name, username, study_mode, init_state_func):
     # Debug output
     #st.write(f"DEBUG: show_answer = {st.session_state.show_answer}")
     
-    # SIMPLE FLASHCARD MODE (no commit, no typing, no verification)
+    # SIMPLE FLASHCARD MODE
     if not mode_config["requires_commit"] and not mode_config["requires_typing"] and not st.session_state.is_verification:
-        # Show question or answer
         if st.session_state.show_answer:
-            flashcard_box(card["answer"])
+            flashcard_box(card["answer"], card.get("image"))  # Pass image
         else:
             flashcard_box(card["question"])
         
-        # Always show controls in flashcard mode
         controls()
     
     # COMMIT MODE

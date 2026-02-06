@@ -21,20 +21,34 @@ def get_deck(deck_name):
     doc = db.decks.find_one({"_id": deck_name})
     return doc["cards"] if doc else []
 
-def add_card(deck_name, question, answer):
+def add_card_to_deck(deck_name, question, answer, image_data=None):
+    """Add a card to a deck with optional image"""
+    from data.db import get_db
     db = get_db()
+    
+    deck = db.decks.find_one({"name": deck_name})
+    if not deck:
+        return False
+    
+    # Get next index
+    next_index = len(deck.get("cards", []))
+    
+    # Create card with optional image
+    new_card = {
+        "index": next_index,
+        "question": question,
+        "answer": answer
+    }
+    
+    if image_data:
+        new_card["image"] = image_data
+    
     db.decks.update_one(
-        {"_id": deck_name},
-        {
-            "$push": {
-                "cards": {
-                    "question": question,
-                    "answer": answer
-                }
-            }
-        },
-        upsert=True
+        {"name": deck_name},
+        {"$push": {"cards": new_card}}
     )
+    
+    return True
 
 def create_deck(deck_name):
     """

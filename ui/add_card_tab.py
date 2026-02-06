@@ -1,59 +1,47 @@
-# ui/add_card_tab.py
+# ui/add_card_tab.py (update the render_add_card_tab function)
 
 import streamlit as st
 import base64
-from data.deck_store import get_deck_names, add_card
-
+from data.deck_store import add_card_to_deck, get_deck_names
 
 def render_add_card_tab():
-    """Render the add card tab"""
-    st.subheader("Add a New Flashcard")
+    st.subheader("➕ Add New Card")
     
-    # Option to select existing deck or create new one
-    deck_option = st.radio(
-        "Choose deck:",
-        options=["Add to existing deck", "Create new deck"]
-    )
+    deck_names = get_deck_names()
+    if not deck_names:
+        st.warning("No decks available. Create a deck first.")
+        return
     
-    if deck_option == "Add to existing deck":
-        existing_decks = get_deck_names()
-        if existing_decks:
-            add_to_deck = st.selectbox(
-                "Select deck:",
-                options=existing_decks,
-                key="add_card_deck"
-            )
-        else:
-            st.warning("No decks exist yet. Please create a new deck below.")
-            deck_option = "Create new deck"
+    selected_deck = st.selectbox("Select deck", deck_names)
     
-    if deck_option == "Create new deck":
-        add_to_deck = st.text_input("New deck name:", key="new_deck_name")
-    
-    with st.form("add_card_form", clear_on_submit=True):
-        new_question = st.text_area("Question", height=100)
-        new_answer = st.text_area("Answer", height=100)
-
-        submitted = st.form_submit_button("Add card")
-
+    with st.form("add_card_form"):
+        question = st.text_area("Question", height=100)
+        answer = st.text_area("Answer", height=150)
+        
+        # Image upload
+        st.markdown("**Optional: Add image to answer**")
+        uploaded_file = st.file_uploader(
+            "Upload image (appears with answer)",
+            type=['png', 'jpg', 'jpeg', 'gif'],
+            help="Image will be shown when the answer is revealed"
+        )
+        
+        submitted = st.form_submit_button("💾 Add Card", type="primary")
+        
         if submitted:
-            if deck_option == "Create new deck" and not add_to_deck.strip():
-                st.error("Please enter a deck name.")
-            elif not new_question.strip() or not new_answer.strip():
-                st.error("Both question and answer are required.")
+            if question.strip() and answer.strip():
+                # Convert image to base64 if uploaded
+                image_data = None
+                if uploaded_file:
+                    bytes_data = uploaded_file.read()
+                    image_data = base64.b64encode(bytes_data).decode()
+                
+                if add_card_to_deck(selected_deck, question, answer, image_data):
+                    st.success("✅ Card added successfully!")
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to add card")
             else:
-                add_card(
-                    add_to_deck.strip(),
-                    new_question.strip(),
-                    new_answer.strip()
-                )
-
-                st.success(f"Flashcard added to '{add_to_deck.strip()}'!")
+                st.warning("Please fill in both question and answer")
                 
-                # Preserve user login
-                if "user" in st.query_params:
-                    user_param = st.query_params["user"]
-                    st.query_params.clear()
-                    st.query_params["user"] = user_param
                 
-                st.rerun()

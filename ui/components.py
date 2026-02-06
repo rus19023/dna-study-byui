@@ -4,7 +4,8 @@ import streamlit as st
 import time
 
 
-def flashcard_box(text):
+def flashcard_box(text, image_data=None):
+    """Display flashcard with optional image"""
     st.markdown(
         f"""
         <div style="
@@ -22,6 +23,10 @@ def flashcard_box(text):
         """,
         unsafe_allow_html=True
     )
+    
+    # Display image if present
+    if image_data:
+        st.image(f"data:image/png;base64,{image_data}", use_column_width=True)
 
 
 def controls():
